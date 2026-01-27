@@ -1,0 +1,116 @@
+
+=== Step 1: Brute-force / noisy IP detection ===
+
+Top IPs overall (across the 3 signals):
+  91.197.232.109: 58
+  34.204.227.175: 44
+  49.4.143.105: 20
+  181.26.186.35: 9
+  122.163.61.218: 8
+
+Breakdown by signal:
+
+maxAuth:
+  49.4.143.105: 20
+  201.178.81.113: 6
+  190.178.62.6: 5
+  186.133.159.181: 5
+  181.26.186.35: 5
+
+invalidUser:
+  91.197.232.109: 58
+  34.204.227.175: 43
+  181.26.186.35: 4
+  122.163.61.218: 3
+  85.245.107.41: 2
+
+noIdentity:
+  209.160.24.191: 2
+  113.108.21.16: 1
+  116.7.243.198: 1
+  178.63.69.201: 1
+  169.54.233.125: 1
+
+=== Step 2: Successful SSH logins (Accepted ...) ===
+
+Summary:
+  Total successful logins: 226
+  Users: elastic_user_0, elastic_user_1, elastic_user_2, elastic_user_3, elastic_user_4, elastic_user_5, elastic_user_6, elastic_user_7, elastic_user_8, elastic_user_9, ubuntu
+  Source IPs: 127.0.0.1, 24.151.103.17, 85.245.107.41, 95.93.96.191
+  Methods: password, publickey
+
+=== Step 3: Privilege escalation indicators ===
+sudo events: 186
+su events: 9
+root sessions opened: 827
+
+=== Step 4: Suspicious admin behaviour ===
+
+Top actors overall (across suspicious behaviours):
+  _logline_: 90
+  ubuntu: 85
+  root: 5
+
+Breakdown by suspicious behaviour type:
+
+install_tools:
+  _logline_: 14
+  ubuntu: 13
+  root: 1
+
+edit_configs:
+  ubuntu: 50
+  _logline_: 50
+
+service_control:
+  _logline_: 24
+  ubuntu: 20
+  root: 4
+
+delete_registry:
+  ubuntu: 2
+  _logline_: 2
+
+Examples (first 10):
+  Mar 27 13:09:37 | install_tools | actor=ubuntu | /usr/bin/curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.2.2-amd64.deb
+  Mar 27 13:09:37 | install_tools | actor=_logline_ | Mar 27 13:09:37 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.2.2-amd64.deb
+  Mar 27 13:10:14 | install_tools | actor=ubuntu | /usr/bin/apt-get install apt-transport-https
+  Mar 27 13:10:14 | install_tools | actor=_logline_ | Mar 27 13:10:14 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/apt-get install apt-transport-https
+  Mar 27 13:10:18 | edit_configs | actor=ubuntu | /usr/bin/tee -a /etc/apt/sources.list.d/elastic-5.x.list
+  Mar 27 13:10:18 | edit_configs | actor=_logline_ | Mar 27 13:10:18 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/tee -a /etc/apt/sources.list.d/elastic-5.x.list
+  Mar 27 13:10:28 | install_tools | actor=ubuntu | /usr/bin/apt-get install filebeat
+  Mar 27 13:10:28 | install_tools | actor=_logline_ | Mar 27 13:10:28 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/apt-get install filebeat
+  Mar 27 13:10:53 | service_control | actor=ubuntu | /usr/sbin/update-rc.d filebeat defaults 95 10
+  Mar 27 13:10:53 | service_control | actor=_logline_ | Mar 27 13:10:53 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/sbin/update-rc.d filebeat defaults 95 10
+
+=== Step 5: Incident Timeline ===
+Mar 27 13:08:09 | LOGIN | ubuntu from 85.245.107.41
+Mar 27 13:09:37 | SUDO | ubuntu ran: /usr/bin/curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.2.2-amd64.deb
+Mar 27 13:09:37 | INSTALL_TOOLS | Mar 27 13:09:37 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.2.2-amd64.deb
+Mar 27 13:09:37 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:08 | SUDO | ubuntu ran: /usr/bin/apt-key add -
+Mar 27 13:10:08 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:14 | SUDO | ubuntu ran: /usr/bin/apt-get install apt-transport-https
+Mar 27 13:10:14 | INSTALL_TOOLS | Mar 27 13:10:14 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/apt-get install apt-transport-https
+Mar 27 13:10:14 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:18 | SUDO | ubuntu ran: /usr/bin/tee -a /etc/apt/sources.list.d/elastic-5.x.list
+Mar 27 13:10:18 | EDIT_CONFIGS | Mar 27 13:10:18 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/tee -a /etc/apt/sources.list.d/elastic-5.x.list
+Mar 27 13:10:18 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:24 | SUDO | ubuntu ran: /usr/bin/apt-get update
+Mar 27 13:10:24 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:28 | SUDO | ubuntu ran: /usr/bin/apt-get install filebeat
+Mar 27 13:10:28 | INSTALL_TOOLS | Mar 27 13:10:28 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/apt-get install filebeat
+Mar 27 13:10:28 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:10:53 | SUDO | ubuntu ran: /usr/sbin/update-rc.d filebeat defaults 95 10
+Mar 27 13:10:53 | SERVICE_CONTROL | Mar 27 13:10:53 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/sbin/update-rc.d filebeat defaults 95 10
+Mar 27 13:10:53 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:11:31 | SUDO | ubuntu ran: /usr/bin/apt-get update
+Mar 27 13:11:31 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:11:34 | SUDO | ubuntu ran: /usr/bin/apt-get update
+Mar 27 13:11:34 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:11:35 | SUDO | ubuntu ran: /usr/bin/apt-get install packetbeat
+Mar 27 13:11:35 | INSTALL_TOOLS | Mar 27 13:11:35 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/apt-get install packetbeat
+Mar 27 13:11:35 | ROOT_SESSION | session opened via sudo:session
+Mar 27 13:17:01 | ROOT_SESSION | session opened via cron:session
+Mar 27 13:23:11 | SUDO | ubuntu ran: /usr/sbin/update-rc.d packetbeat defaults 95 10
+Mar 27 13:23:11 | SERVICE_CONTROL | Mar 27 13:23:11 ip-10-77-20-248 sudo:   ubuntu : TTY=pts/0 ; PWD=/usr/share/filebeat/bin ; USER=root ; COMMAND=/usr/sbin/update-rc.d packetbeat defaults 95 10
